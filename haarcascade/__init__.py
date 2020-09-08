@@ -1,5 +1,6 @@
 """Detection with Haar cascade and filtering with Non-Maxima Supression (NMS)."""
 
+from .version import __version__
 import cv2
 
 
