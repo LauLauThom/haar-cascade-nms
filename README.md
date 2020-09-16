@@ -2,7 +2,7 @@
 This simple project provides a `Detector` class extending the opencv `CascadeDetector`class with a new function: `detectAndFilter`.  
 This function performs the detection using the cascade and filter the detections based on the score and their overlap to yield the best detections that do not overlap above the selected `overlap-threshold`.
 
-For more details about Non-Maxima Supression, you can refer to my article about Multi-Template Matching, which uses a similar strategy (or other online ressources).  
+For more details about Non-Maxima Suppression, you can refer to my article about Multi-Template Matching, which uses a similar strategy (or other online ressources).  
 Here the NMS shipped with OpenCV is used.
 
 # Installation
