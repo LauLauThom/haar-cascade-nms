@@ -15,7 +15,7 @@ setuptools.setup(
 	description="Extend opencv haar-cascade detector to filter detections with Non-Maxima Suppression (NMS)",
 	long_description=long_description,
 	long_description_content_type="text/markdown",
-	keywords="object-recognition object-localization cascade-detectors opencv",
+	keywords="object-recognition object-detection object-localization cascade-detectors haar-cascade opencv",
 	url="https://github.com/LauLauThom/haar-cascade-nms",
 	packages=["haarcascade"],
 	install_requires=['opencv-python-headless'],
