@@ -2,19 +2,54 @@
 
 from .version import __version__
 import cv2
-
+import numpy as np
 
 class Detector(cv2.CascadeClassifier):
-    """Extend the opencv haar-cascade detector, by adding the method detectAndFilter."""
+    """Extends the opencv haar-cascade detector, by adding the method detectAndFilter with overlap-based Non-Maxima Suppression (NMS)."""
     
     def detectAndFilter(self, 
                         image, 
-                        scaleFactor,
-                        minSize, maxSize, 
-                        score_threshold, 
-                        overlap_threshold, 
+                        minSize, maxSize,
+                        scaleFactor=1.1,
+                        score_threshold=0.5, 
+                        overlap_threshold=0.3, 
                         nObjects=float("inf")):
-        """Detect object using trained cascade and filter overlapping detections with NMS."""
+        """Detect objects at multiple scales and filter overlapping detections with overlap-based Non-Maxima Suppression (NMS) when nObjects>1.
+        
+        NMS removes low score bounding-boxes, overlapping above the overlap-threshold with higher score bounding-boxes.
+        When nObjects=1, the highest-score detection is returned if it is above the score-threshold, no NMS is performed.
+        
+        Parameters
+        ----------
+        image : 2D numpy array
+            image in which to search objects with the cascade.
+        
+        minSize, maxSize : tuple of 2 int
+            min and max dimensions of the bounding-boxes (width, height). 
+            Limit the range of the image-pyramid for the detection.
+        
+        scaleFactor : float, optional 
+            step size for the scale search of the image-pyramid 
+            ex: 1.1 = 10% step size between minSize and maxSize.
+        
+        score_threshold: float, optional
+            minimum bounding-box score to report a detection when Nobjects>1.
+        
+        overlap_threshold: float, between 0 and 1, optional
+            maximum overlap between 2 neighboring bounding-boxes for the NMS (calculated as the Intersection over Union - IoU).
+        
+        nObjects: int
+            expected number of objects (if known). 
+            The detection will return up to nObjects detections but maybe less depending on the output of the NMS.
+        
+        Returns
+        -------
+        Boxes: list of list
+            Up to Nobjects detected bounding-boxes, formatted as [x,y,width,height].
+        
+        Scores: list of float
+            Score associated to each detection.
+        """
         # Initial detection
         bboxes, rejectLevel, levelWeights = self.detectMultiScale3(image,
                                                                    scaleFactor,
@@ -22,22 +57,41 @@ class Detector(cv2.CascadeClassifier):
                                                                    minSize = minSize,
                                                                    maxSize = maxSize,
                                                                    outputRejectLevels = True)
-        # BBoxes formatting and NMS
-        scores = levelWeights[:,0]
-        indexes = cv2.dnn.NMSBoxes(bboxes.tolist(), scores, score_threshold, overlap_threshold)
+                                                                   
+        if nObjects==1:
+            
+            # find highest score detection
+            index = np.argmax(levelWeights)
+            score = levelWeights[index][0]
+            
+            if score>=score_threshold:
+                finalBoxes  = [bboxes[index]]
+                finalScores = [score]
+            
+            else:
+                finalBoxes=[]
+                finalScores=[]
         
-        # final list of hits
-        nBoxes = len(indexes)
-        finalScores = [None] * nBoxes 
-        finalBoxes  = [None] * nBoxes
         
-        for i, index in enumerate(indexes[:,0]):
-            finalBoxes [i] = bboxes[index].tolist()
-            finalScores[i] = scores[index]
+        else: # Nobject>1
+            
+            # NMS
+            scores = levelWeights[:,0]
+            indexes = cv2.dnn.NMSBoxes(bboxes.tolist(), scores, score_threshold, overlap_threshold)
+            
+            # final list of hits
+            nBoxes = len(indexes)
+            finalScores = [None] * nBoxes 
+            finalBoxes  = [None] * nBoxes
+            
+            for i, index in enumerate(indexes[:,0]):
+                finalBoxes [i] = bboxes[index].tolist()
+                finalScores[i] = scores[index]
+            
+            
+            # Return up to nObjects if mentioned
+            if nObjects != float("inf"):
+                finalBoxes  = finalBoxes[:nObjects]
+                finalScores = finalScores[:nObjects]
         
-        # Return up to nObjects if mentioned
-        if nObjects != float("inf"):
-            finalBoxes  = finalBoxes[:nObjects]
-            finalScores = finalScores[:nObjects]
-        
-        return finalBoxes, finalScores
+        return finalBoxes, finalScores # both are list like the original detectMultiScale3 method
