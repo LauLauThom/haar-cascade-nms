@@ -57,7 +57,11 @@ class Detector(cv2.CascadeClassifier):
                                                                    minSize = minSize,
                                                                    maxSize = maxSize,
                                                                    outputRejectLevels = True)
+        # No detections found
+        if levelWeights.size==0:
+            return [], []
                                                                    
+        
         if nObjects==1:
             
             # find highest score detection
