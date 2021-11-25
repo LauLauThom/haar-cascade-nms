@@ -18,7 +18,7 @@ setuptools.setup(
 	keywords="object-recognition object-detection object-localization cascade-detectors haar-cascade opencv",
 	url="https://github.com/LauLauThom/haar-cascade-nms",
 	packages=["haarcascade"],
-	install_requires=['opencv-python-headless'],
+	install_requires=['opencv-python-headless>=4.5.4'],
 	classifiers=[
 		"Programming Language :: Python :: 3",
 		"License :: OSI Approved :: MIT License",

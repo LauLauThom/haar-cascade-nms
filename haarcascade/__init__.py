@@ -51,25 +51,25 @@ class Detector(cv2.CascadeClassifier):
             Score associated to each detection.
         """
         # Initial detection
-        bboxes, rejectLevel, levelWeights = self.detectMultiScale3(image,
-                                                                   scaleFactor,
-                                                                   minNeighbors = 1,
-                                                                   minSize = minSize,
-                                                                   maxSize = maxSize,
-                                                                   outputRejectLevels = True)
+        bboxes, rejectLevel, scores = self.detectMultiScale3(image,
+                                                             scaleFactor,
+                                                             minNeighbors = 1,
+                                                             minSize = minSize,
+                                                             maxSize = maxSize,
+                                                             outputRejectLevels = True)
         # No detections found
-        if levelWeights.size==0:
+        if scores.size==0:
             return [], []
                                                                    
         
-        if nObjects==1:
+        if nObjects == 1:
             
             # find highest score detection
-            index = np.argmax(levelWeights)
-            score = levelWeights[index][0]
+            index = np.argmax(scores)
+            score = scores[index]
             
-            if score>=score_threshold:
-                finalBoxes  = [bboxes[index]]
+            if score >= score_threshold:
+                finalBoxes  = [bboxes[index].tolist()]
                 finalScores = [score]
             
             else:
@@ -80,15 +80,14 @@ class Detector(cv2.CascadeClassifier):
         else: # Nobject>1
             
             # NMS
-            scores = levelWeights[:,0]
-            indexes = cv2.dnn.NMSBoxes(bboxes.tolist(), scores, score_threshold, overlap_threshold)
+            indexes = cv2.dnn.NMSBoxes(bboxes, scores, score_threshold, overlap_threshold)
             
             # final list of hits
             nBoxes = len(indexes)
             finalScores = [None] * nBoxes 
             finalBoxes  = [None] * nBoxes
             
-            for i, index in enumerate(indexes[:,0]):
+            for i, index in enumerate(indexes):
                 finalBoxes [i] = bboxes[index].tolist()
                 finalScores[i] = scores[index]
             
